@@ -1,0 +1,23 @@
+{
+  "input": "synthetic radiography phantom",
+  "model": "incumbent+adapted-incumbent-224-0.50",
+  "projections": [
+    "frontal"
+  ],
+  "probabilities": {
+    "Atelectasis": 0.07782517498389635,
+    "Cardiomegaly": 0.00255862353707048,
+    "Effusion": 0.06887549156824116,
+    "Infiltration": 0.10423965885505684,
+    "Mass": 0.021472527576557758,
+    "Nodule": 0.012005128935901499,
+    "Pneumonia": 0.009219440415484361,
+    "Pneumothorax": 0.018795903051717047,
+    "Consolidation": 0.08362667840696582,
+    "Edema": 0.01751263624107728,
+    "Emphysema": 0.0038940730742511058,
+    "Fibrosis": 0.004626583652372802,
+    "Pleural_Thickening": 0.013546479477307213,
+    "Hernia": 0.00050536718648052
+  }
+}
