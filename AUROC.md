@@ -1,5 +1,7 @@
 # High-resolution chest X-ray experiment
 
+This report covers the earlier 0.8025 ensemble. The [BioViL-T follow-up](RESEARCH.md) reached 0.8103 on the same official test.
+
 ![Aggregate AUROC across three locked experiments](figures/auroc-summary.png)
 
 | Official test metric | Previous model | Selected ensemble |

@@ -2,13 +2,13 @@
 
 Group-aware training and calibrated prediction for 14 findings on frontal chest radiographs.
 
-**0.8025 macro AUROC** and **0.2591 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.7965–0.8087.
+**0.8103 macro AUROC** and **0.2804 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8039–0.8161.
 
-The [high-resolution experiment](AUROC.md) covers the validation ranking, paired test comparison and reproducibility. See also the [previous search](REPORT.md), [search trajectories](figures/search.png), [previous aggregate metrics](metrics.json), and [synthetic prediction example](examples/README.md).
+The [BioViL-T experiment](RESEARCH.md) documents the latest validation ranking, paired test comparison and reproducibility. The [earlier high-resolution experiment](AUROC.md) reached 0.8025. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
 
 ## Start with one prediction
 
-See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WALKTHROUGH.md) follows the image through both models, explains the thresholds and shows how to check the output locally.
+See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WALKTHROUGH.md) follows the image through both models, explains the thresholds and shows how to check the output locally. [See which regions changed its effusion score](WHERE-THE-MODEL-LOOKS.md)
 
 ![One example chest X-ray, its resized input and four prediction scores](examples/workflow.png)
 
@@ -16,7 +16,7 @@ See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WAL
 
 ![Aggregate AUROC across three locked experiments](figures/auroc-summary.png)
 
-The [research report](RESEARCH.md) explains the next model and the checks used to keep pretrained weights from weakening the test split.
+The figure summarizes the earlier experiments. The new comparison and its patient-bootstrap interval are reported in the [research report](RESEARCH.md).
 
 ## Dataset
 
@@ -65,10 +65,10 @@ The runner writes the initial experiment under `artifacts/` and the extended sea
 
 ## Predict from raw input
 
-Use the [high-resolution workflow](AUROC.md#reproduce-and-predict) to prepare the final ensemble and its validation lock.
+Use the [BioViL-T workflow](RESEARCH.md#reproduce-the-selected-model) to prepare the selected ensemble and its validation lock.
 
 ```powershell
-& $p -m medimage.auc_predict --selection "$experiment/evaluation/chest-locked-1/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$experiment/chest-prediction.json"
+& $p -m medimage.auc_predict --selection "$evaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$evaluation/chest-prediction.json"
 ```
 
 The [example](examples/README.md) runs the selected local models on deterministic synthetic inputs. This is a research and education project.

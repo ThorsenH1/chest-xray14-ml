@@ -1,8 +1,10 @@
 # Synthetic prediction example
 
-The shared engine generates the input as a deterministic mathematical pattern. The [current ensemble response](auroc-ensemble.json) gives 14 calibrated scores and the corresponding validation thresholds. For example, the effusion score is 0.0807 against a threshold of 0.2581. The example illustrates the inference interface.
+The shared engine generates the input as a deterministic mathematical pattern. The [current BioViL-T ensemble response](biovil-ensemble.json) gives 14 calibrated scores and their validation thresholds. For effusion, the synthetic score is 0.1667 with a threshold of 0.2686. [See where the effusion component responded](../WHERE-THE-MODEL-LOOKS.md)
 
 ![Synthetic input phantom.png](phantom.png)
+
+## Original model search
 
 | Output | Previous model score |
 | --- | ---: |
