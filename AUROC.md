@@ -47,16 +47,42 @@ Macro AUROC weights all 14 findings equally. Pneumonia and infiltration had the 
 
 ## Reproduce and predict
 
-Run the [previous training workflow](README.md#reproduce-the-experiment) to generate the original cohorts and model artifacts. The [shared protocol](https://github.com/ThorsenH1/medimage-ml-lab/blob/a290fb416fe8bce87541efabb15a4a017a362d2e/docs/auroc.md) documents model selection and scoring.
+Run the [previous training workflow](README.md#reproduce-the-experiment) first and retain `$p`, `$data` and `$hf`. The CheXpert candidate uses the TorchXRayVision CheXpert-only DenseNet-121 checkpoint with SHA-256 `1a914ae802170187a4852e594708206c12468eeeefd66aa4e8e26141649d61a4`. Save it at `$chex`. [Checkpoint source](https://github.com/mlmed/torchxrayvision/blob/master/torchxrayvision/models.py) · [Shared protocol](https://github.com/ThorsenH1/medimage-ml-lab/blob/a290fb416fe8bce87541efabb15a4a017a362d2e/docs/auroc.md)
 
 ```powershell
-& $p -m medimage.search_features pixels chest --cohort artifacts/cache/chest --root $data --output "$experiment/pixels/chest384" --chest-size 384 --workers 8
+$PSNativeCommandUseErrorActionPreference = $true
+$ErrorActionPreference = 'Stop'
+$experiment = 'D:/experiments/chest-discrimination'
+$search = 'search-artifacts'
+$cohort = 'artifacts/cache/chest'
+$chex = 'D:/weights/chex-densenet121.pt'
+$pixels224 = "$search/pixels/chest"
+$pixels384 = "$experiment/pixels/chest384"
 $parent = "$search/runs/chest/adaptation-reference/best.pt"
-& $p -m medimage.auc_train chest --backbone chest-reference --cohort artifacts/cache/chest --pixels "$experiment/pixels/chest384" --weights $parent --parent $parent --output "$experiment/runs/chest-reference384" --epochs 3 --batch 42 --resolution 384 --depth 2 --lr 0.00006 --head-lr 0.00013 --class-power 0.44 --seed 4413 --block 2016 --tta
-```
 
-```powershell
-& $p -m medimage.auc_predict --selection "$experiment/evaluation/chest-locked-1/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image examples/phantom.png --output prediction.json
+& $p -m medimage.search_features pixels chest --cohort $cohort --root $data --output $pixels384 --chest-size 384 --workers 8
+& $p -m medimage.auc_train chest --backbone chex --cohort $cohort --pixels $pixels224 --weights $chex `
+    --output "$experiment/runs/chest-chex224" --epochs 4 --batch 56 --resolution 224 --depth 4 `
+    --lr 0.000095 --head-lr 0.0004 --class-power 0.45 --tta
+& $p -m medimage.auc_train chest --backbone chest-reference --cohort $cohort --pixels $pixels384 `
+    --weights $parent --parent $parent --output "$experiment/runs/chest-reference384" `
+    --epochs 3 --batch 42 --resolution 384 --depth 2 --lr 0.00006 --head-lr 0.00013 `
+    --class-power 0.44 --seed 4413 --block 2016 --tta
+& $p -m medimage.auc_fusion --cohort $cohort --pixels $pixels224 --features "$search/features/chest" `
+    --output "$experiment/runs/chest-feature-fusion" --epochs 12 --seed 4610
+
+$evaluation = "$experiment/evaluation/chest-locked-1"
+$paths = @('--work', $experiment, '--previous', $search, '--cohort', $cohort, '--output', $evaluation)
+& $p -m medimage.auc_selection lock chest @paths `
+    --candidate 'chex224=runs/chest-chex224@previous-chest224' `
+    --candidate 'reference384=runs/chest-reference384@chest384' `
+    --candidate 'fusion-1=runs/chest-feature-fusion/recipe-1@previous-chest224' `
+    --candidate 'fusion-2=runs/chest-feature-fusion/recipe-2@previous-chest224' `
+    --candidate 'fusion-3=runs/chest-feature-fusion/recipe-3@previous-chest224'
+& $p -m medimage.auc_selection test chest @paths --weights $hf --bootstrap 1000
+& $p -m medimage.auc_report --output $evaluation --previous $search
+& $p -m medimage.auc_predict --selection "$evaluation/selection.json" --work $experiment `
+    --previous $search --original artifacts --weights $hf --image examples/phantom.png --output "$evaluation/phantom.json"
 ```
 
 The [synthetic example](examples/README.md) includes the input image and the current model's complete JSON response.

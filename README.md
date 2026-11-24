@@ -55,10 +55,10 @@ The runner writes the initial experiment under `artifacts/` and the extended sea
 
 ## Predict from raw input
 
-Use the model selection and checkpoint roots produced by the runner.
+Use the [high-resolution workflow](AUROC.md#reproduce-and-predict) to prepare the final ensemble and its validation lock.
 
 ```powershell
-& $p -m medimage.search_predict radiography --selection search-artifacts/evaluation/chest/selection.json --search search-artifacts/runs/chest --weights $hf --original artifacts --image 'C:/images/frontal.png' --output search-artifacts/inference/chest.json
+& $p -m medimage.auc_predict --selection "$experiment/evaluation/chest-locked-1/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$experiment/chest-prediction.json"
 ```
 
 The [example](examples/README.md) runs the selected local models on deterministic synthetic inputs. This is a research and education project.
