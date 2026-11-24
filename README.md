@@ -6,7 +6,17 @@ Group-aware training and calibrated prediction for 14 findings on frontal chest 
 
 The [high-resolution experiment](AUROC.md) covers the validation ranking, paired test comparison and reproducibility. See also the [previous search](REPORT.md), [search trajectories](figures/search.png), [previous aggregate metrics](metrics.json), and [synthetic prediction example](examples/README.md).
 
+## Start with one prediction
+
+See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WALKTHROUGH.md) follows the image through both models, explains the thresholds and shows how to check the output locally.
+
+![One example chest X-ray, its resized input and four prediction scores](examples/workflow.png)
+
+## Benchmark
+
 ![Aggregate AUROC across three locked experiments](figures/auroc-summary.png)
+
+The [research report](RESEARCH.md) explains the next model and the checks used to keep pretrained weights from weakening the test split.
 
 ## Dataset
 
