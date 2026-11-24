@@ -2,11 +2,11 @@
 
 Group-aware training and calibrated prediction for 14 findings on frontal chest radiographs.
 
-**0.7900 macro AUROC** versus 0.7787 in the initial run, evaluated on the same 25,596 test units.
+**0.8025 macro AUROC** and **0.2591 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.7965–0.8087.
 
-Selected configuration `incumbent+adapted-incumbent-224-0.50`. See the [experiment report](REPORT.md), [search trajectories](figures/search.png), [aggregate metrics](metrics.json), and [synthetic prediction example](examples/README.md).
+The [high-resolution experiment](AUROC.md) covers the validation ranking, paired test comparison and reproducibility. See also the [previous search](REPORT.md), [search trajectories](figures/search.png), [previous aggregate metrics](metrics.json), and [synthetic prediction example](examples/README.md).
 
-![Benchmark figure for Chest X-ray14 Multi-Label Classification](figures/benchmark.png)
+![Aggregate AUROC across three locked experiments](figures/auroc-summary.png)
 
 ## Dataset
 

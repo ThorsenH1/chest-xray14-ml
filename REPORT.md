@@ -1,4 +1,6 @@
-# Experiment report
+# Previous model-search report
+
+The [follow-up experiment](AUROC.md) raised macro AUROC to 0.8025 on the same official test cohort. The results below document the prior search.
 
 The selected configuration is `incumbent+adapted-incumbent-224-0.50` with weights {"incumbent-global": 0.5, "adapted-incumbent-224": 0.5}.
 
