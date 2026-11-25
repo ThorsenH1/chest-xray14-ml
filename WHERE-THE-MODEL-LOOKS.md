@@ -1,14 +1,14 @@
 # See which parts of the image change the score
 
-![A faint synthetic shadow, its before and after zoom, and measured model responses](examples/where-model-looked.png)
+![Generated chest X-ray, the added shadow before and after, and a heatmap of the full ensemble's response to local blur](examples/ensemble-region-probe.png)
 
-1. The turquoise box shows where a faint bright patch was added to the generated chest image.
-2. The two zooms show the same patch of the image before and after the edit.
-3. The last panel tests the trained **BioViL-T effusion scorer**. Each probe blurs one small region of the processed image, runs the model again and records how the score moves.
+1. Find the turquoise box. It shows where a faint bright patch was added to this generated chest image.
+2. Compare the two close-ups. They show the same area before and after the edit.
+3. Read the heatmap. Each probe starts from the edited image and blurs just one patch. The image goes through all three models, BioViL-T, ConvNeXt and CXR-CLIP, and the usual ensemble scoring steps. The orange outline shows the patch that changed the score most.
 
-**Red** shows a region where blurring lowered the score. **Blue** shows a region where blurring raised it. The edit changed the branch's internal score from **−1.150 to −1.128**. Several regions outside the added patch mattered to the model in this example. The map is a test of the score's response to blur in this specific image. [Edited synthetic input](examples/phantom-edited.png) · [All measured probes](examples/region-evidence.json)
+**Red** means blurring lowered the effusion score. **Blue** means blurring raised it. The added shadow moved the score from **3.169% to 3.510%**. Blurring the orange patch, which overlaps part of the shadow, raised the score to **3.748%**. This was the largest change among the 49 patches tested. The heatmap measures how one image's score responds to blur. [Edited synthetic input](examples/phantom-edited.png) · [All measured probes](examples/ensemble-region-evidence.json)
 
-The example measures an internal score from one component. The [prediction walkthrough](WALKTHROUGH.md) shows how the ensemble combines that component with the reference and calibrates the final output. The generated shadow is a visual teaching device.
+Effusion means fluid around a lung. The generated shadow is a visual teaching device. The [prediction walkthrough](WALKTHROUGH.md) shows how the model scores the unedited image.
 
 ## Check the model's strongest location against reference boxes
 
@@ -22,7 +22,7 @@ The NIH box file contains 984 annotations for eight findings across 880 images i
 
 The patient-bootstrap interval for the BioViL-T peak was **2.9–5.4%**. Results differ by finding. The peak was inside the marked area on **12.4%** of effusion examples and **10.2%** of pneumothorax examples.
 
-This test checks the location of one internal score maximum on annotated positive images. The blur experiment above shows what changes a score when the image is altered. Use the dataset box as the placement reference when comparing these views.
+This test checks the location of one internal BioViL-T score maximum on annotated positive images. It evaluates a different method from the ensemble blur experiment. Use the dataset box as the placement reference when comparing a local image with its heatmap.
 
 Reproduce the peak audit with the locked BioViL-T model from [the research report](RESEARCH.md). Use the original NIH image folder and its box file.
 
@@ -32,11 +32,11 @@ Reproduce the peak audit with the locked BioViL-T model from [the research repor
     --output "$evaluation/localization-audit.json"
 ```
 
-## Reproduce the test
+## Reproduce the ensemble heatmap
 
-Use the trained BioViL-T run and the [frozen ensemble selection](RESEARCH.md). Omitting an input file regenerates the same phantom. To study a local frontal image, add `--image` with its path and keep the resulting figure alongside your local data.
+Use the three trained runs and the frozen selection from the [three-model workflow](RESEARCH.md#reproduce-the-selected-three-model-ensemble). Omitting an input file regenerates the same phantom. To study a local frontal image, add `--image` with its path and keep the resulting figure with your local data. If you have a dataset annotation, give its four original pixel coordinates with `--reference-box LEFT TOP RIGHT BOTTOM`. Repeat the option for multiple boxes. The figure shows separate close-ups of the first reference box and the patch with the largest change in score.
 
 ```powershell
-& $p -m medimage.visual_explain --selection "$evaluation/selection.json" --work $experiment `
-    --weights $hf --component biovil384 --label Effusion --output "$evaluation/region-probe"
+& $p -m medimage.chest_ensemble_explain --selection "$jointEvaluation/selection.json" --work $experiment `
+    --weights $hf --label Effusion --output "$jointEvaluation/region-probe"
 ```

@@ -12,7 +12,7 @@ A single frontal image goes through three scoring pipelines. The final model rep
 
 Both BioViL-T and ConvNeXt read the image at 384 × 384 pixels. BioViL-T combines a whole-image score with a branch that scores smaller areas. CXR-CLIP reads the 224 × 224 version. The selected model gives the three raw scores, or **logits**, equal weight for each finding. The probability conversion and thresholds are fitted on validation.
 
-In the example, the three effusion logits average to **−3.1398**. After calibration the score is **0.0317**. The validation threshold is **0.2579**, so the example returns `threshold_crossed: false`. [All 14 scores](examples/swin-convnext-ensemble.json) · [Component and calibration trace](examples/frontal-trace.json) · [Where blur changed BioViL-T's score](WHERE-THE-MODEL-LOOKS.md)
+In the example, the three effusion logits average to **−3.1398**. After calibration the score is **0.0317**. The validation threshold is **0.2579**, so the example returns `threshold_crossed: false`. [All 14 scores](examples/swin-convnext-ensemble.json) · [Component and calibration trace](examples/frontal-trace.json) · [Where blur changed the ensemble score](WHERE-THE-MODEL-LOOKS.md)
 
 ## 3. Run and check the example
 
