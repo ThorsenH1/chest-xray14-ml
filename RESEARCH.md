@@ -193,3 +193,34 @@ $jointPaths = @('--work', $experiment, '--previous', $search, '--cohort', $cohor
 ```
 
 The [prediction walkthrough](WALKTHROUGH.md) follows the selected model from an example image to the 14 calibrated outputs.
+
+## Give easy negatives less weight during training
+
+The follow-up starts from the 384-pixel ConvNeXt checkpoint and fine-tunes for two epochs. For negative labels, the loss weight is the model's predicted probability raised to 0.75. A negative example that the model already scores near zero contributes less. Positive examples use class weighting with exponent 0.20. The experiment competes against the current blend on the same patient-grouped validation split.
+
+```powershell
+& $p -m medimage.auc_train chest --backbone convnext-chest --cohort $cohort --pixels $pixels384 `
+    --weights $convnext --parent "$experiment/runs/chest-convnext384/best.pt" `
+    --output "$experiment/runs/chest-convnext384-focal" --epochs 2 --batch 16 --accumulate 4 `
+    --resolution 384 --depth 2 --lr 0.000045 --head-lr 0.00016 --class-power 0.20 `
+    --focal-neg 0.75 --dropout 0.28 --seed 5767 --block 1024 --tta
+```
+
+Add `convnext384-focal=runs/chest-convnext384-focal@chest384` to the same candidate list and save a separate validation decision. The follow-up qualifies for official test scoring when a blend uses this branch and improves on **0.8650 validation AUROC**.
+
+## Check whether projection information improves ranking
+
+An AP or PA projection label records the direction in which the image was taken. I tested whether a separate correction for each projection helps the model rank patients. Each of five validation folds fits global calibration, then learns a small per-finding offset for AP and PA from the other four folds. The same patient group stays together. The offsets shrink toward zero for findings with little evidence for a correction.
+
+| Scoring rule on 10,411 validation images | Macro AUROC | Macro average precision |
+| --- | ---: | ---: |
+| Frozen three-model raw score | **0.8650** | **0.2953** |
+| Cross-fitted global calibration | 0.8630 | 0.2911 |
+| Cross-fitted global calibration and view offsets | 0.8630 | 0.2920 |
+
+Adding the offsets changed AUROC by **−0.00003** relative to the same cross-fitted global calibration. The mean Brier score moved from 0.033828 to 0.033813. The larger difference relative to the frozen raw score includes the effect of fitting separate calibration parameters across folds. The published model uses the frozen raw-score blend and one global calibration per finding.
+
+```powershell
+& $p -m medimage.chest_view_audit --base-lock "$jointEvaluation/selection.json" --cohort $cohort `
+    --work $experiment --previous $search --output "$jointEvaluation/view-validation.json" --bootstrap 1000
+```
