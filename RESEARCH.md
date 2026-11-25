@@ -218,9 +218,39 @@ An AP or PA projection label records the direction in which the image was taken.
 | Cross-fitted global calibration | 0.8630 | 0.2911 |
 | Cross-fitted global calibration and view offsets | 0.8630 | 0.2920 |
 
-Adding the offsets changed AUROC by **−0.00003** relative to the same cross-fitted global calibration. The mean Brier score moved from 0.033828 to 0.033813. The larger difference relative to the frozen raw score includes the effect of fitting separate calibration parameters across folds. The published model uses the frozen raw-score blend and one global calibration per finding.
+Adding the offsets changed AUROC by **−0.00003** relative to the same cross-fitted global calibration. The mean Brier score moved from 0.033828 to 0.033813. The larger difference relative to the frozen raw score includes the effect of fitting separate calibration parameters across folds. The reference for this experiment uses the frozen raw-score blend and one global calibration per finding.
 
 ```powershell
 & $p -m medimage.chest_view_audit --base-lock "$jointEvaluation/selection.json" --cohort $cohort `
     --work $experiment --previous $search --output "$jointEvaluation/view-validation.json" --bootstrap 1000
 ```
+
+## Fit a different blend for each finding
+
+The three models can rank one finding differently from another. For each of the 14 findings, I sampled pairs with one positive and one negative labeled image. The fit rewards weights that place the positive image above the negative image. The three weights are nonnegative and sum to one. A penalty pulls them toward equal weights, especially when positive examples are scarce.
+
+I compared penalties of 0.03, 0.18, and 0.70 on both the original and calibrated component scores. Each of five folds learns its weights from the other four validation folds. Patient groups stay together. The winner used the original component scores with penalty 0.03. I refit those weights and the final probability calibration on all 10,411 validation images before evaluating the test set.
+
+| Combination rule | Validation macro AUROC | Test macro AUROC | Test average precision | Test Brier score ↓ |
+| --- | ---: | ---: | ---: | ---: |
+| Equal weights | 0.86496 | 0.83387 | 0.31378 | 0.05563 |
+| Best per-finding weights after component calibration | 0.86408 | — | — | — |
+| Per-finding weights on original logits | **0.86634** | **0.83502** | **0.31540** | **0.05548** |
+
+The paired AUROC gain was **0.00115**, with a 95% patient-bootstrap interval of **+0.00075 to +0.00151**. The test AUROC interval for the selected recipe was **0.82908–0.84007**. Ten findings improved, including nodule by **0.00445**. Pneumonia fell by **0.00172**. The 25,596-image official test uses the same NIH cohort as earlier rounds. [Paired aggregate results by finding](figures/ranking-comparison.json)
+
+```powershell
+$rankEvaluation = "$experiment/evaluation/chest-finding-weights"
+& $p -m medimage.chest_rank_blend --base-lock "$jointEvaluation/selection.json" `
+    --work $experiment --previous $search --cohort $cohort --score-space raw --output $rankEvaluation
+& $p -m medimage.chest_rank_blend --base-lock "$jointEvaluation/selection.json" `
+    --work $experiment --previous $search --cohort $cohort --score-space calibrated `
+    --output "$experiment/evaluation/chest-finding-weights-component-calibrated"
+& $p -m medimage.auc_selection test chest --work $experiment --previous $search --cohort $cohort `
+    --weights $hf --output $rankEvaluation --reuse-components $jointEvaluation --bootstrap 1000
+& $p -m medimage.auc_compare --cohort $cohort --reference $jointEvaluation --candidate $rankEvaluation `
+    --output "$rankEvaluation/paired-equal-weight.json" --figure "$rankEvaluation/finding-comparison.png" `
+    --reference-name 'Equal weight per model' --candidate-name 'Weights fitted per finding' --bootstrap 1000
+```
+
+The test command verifies that the saved component scores came from the same checkpoints, images and labels. [Follow one prediction with the learned weights](WALKTHROUGH.md)

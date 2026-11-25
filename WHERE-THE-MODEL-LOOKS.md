@@ -6,7 +6,7 @@
 2. Compare the two close-ups. They show the same area before and after the edit.
 3. Read the heatmap. Each probe starts from the edited image and blurs just one patch. The image goes through all three models, BioViL-T, ConvNeXt and CXR-CLIP, and the usual ensemble scoring steps. The orange outline shows the patch that changed the score most.
 
-**Red** means blurring lowered the effusion score. **Blue** means blurring raised it. The added shadow moved the score from **3.169% to 3.510%**. Blurring the orange patch, which overlaps part of the shadow, raised the score to **3.748%**. This was the largest change among the 49 patches tested. The heatmap measures how one image's score responds to blur. [Edited synthetic input](examples/phantom-edited.png) · [All measured probes](examples/ensemble-region-evidence.json)
+**Red** means blurring lowered the effusion score. **Blue** means blurring raised it. The added shadow moved the score from **3.124% to 3.445%**. Blurring the orange patch, which overlaps part of the shadow, raised the score to **3.683%**. This was the largest change among the 49 patches tested. The heatmap measures how one image's score responds to blur. [Edited synthetic input](examples/phantom-edited.png) · [All measured probes](examples/ensemble-region-evidence.json)
 
 Effusion means fluid around a lung. The generated shadow is a visual teaching device. The [prediction walkthrough](WALKTHROUGH.md) shows how the model scores the unedited image.
 
@@ -34,9 +34,9 @@ Reproduce the peak audit with the locked BioViL-T model from [the research repor
 
 ## Reproduce the ensemble heatmap
 
-Use the three trained runs and the frozen selection from the [three-model workflow](RESEARCH.md#reproduce-the-selected-three-model-ensemble). Omitting an input file regenerates the same phantom. To study a local frontal image, add `--image` with its path and keep the resulting figure with your local data. If you have a dataset annotation, give its four original pixel coordinates with `--reference-box LEFT TOP RIGHT BOTTOM`. Repeat the option for multiple boxes. The figure shows separate close-ups of the first reference box and the patch with the largest change in score.
+Use the three trained runs and the [selection with per-finding weights](RESEARCH.md#fit-a-different-blend-for-each-finding). Omitting an input file regenerates the same phantom. To study a local frontal image, add `--image` with its path and keep the resulting figure with your local data. If you have a dataset annotation, give its four original pixel coordinates with `--reference-box LEFT TOP RIGHT BOTTOM`. Repeat the option for multiple boxes. The figure shows separate close-ups of the first reference box and the patch with the largest change in score.
 
 ```powershell
-& $p -m medimage.chest_ensemble_explain --selection "$jointEvaluation/selection.json" --work $experiment `
-    --weights $hf --label Effusion --output "$jointEvaluation/region-probe"
+& $p -m medimage.chest_ensemble_explain --selection "$rankEvaluation/selection.json" --work $experiment `
+    --weights $hf --label Effusion --output "$rankEvaluation/region-probe"
 ```

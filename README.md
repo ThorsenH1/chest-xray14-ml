@@ -2,9 +2,9 @@
 
 Group-aware training and calibrated prediction for 14 findings on frontal chest radiographs.
 
-**0.8339 macro AUROC** and **0.3138 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8280–0.8390.
+**0.8350 macro AUROC** and **0.3154 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8291–0.8401.
 
-The [research report](RESEARCH.md) shows why the selected ensemble combines BioViL-T, ConvNeXt and CXR-CLIP. It includes the validation ranking, paired test comparison and reproduction steps. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
+The [research report](RESEARCH.md) shows how the selected ensemble weights BioViL-T, ConvNeXt and CXR-CLIP separately for each finding. It includes the validation ranking, paired test comparison and reproduction steps. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
 
 ## Start with one prediction
 
@@ -14,9 +14,9 @@ See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WAL
 
 ## Benchmark
 
-![Finding-level test AUROC for the previous and current three-model ensemble](figures/finding-comparison.png)
+![Finding-level test AUROC with equal weights and with weights fitted per finding](figures/ranking-comparison.png)
 
-The paired change in macro AUROC from the previous ConvNeXt blend was +0.0168. [See the confidence intervals and earlier experiments](RESEARCH.md#combine-cxr-clip-with-higher-resolution-convnext)
+Fitting a separate blend per finding increased macro AUROC by 0.00115 over the previous equal-weight model on the same test set. [See the confidence intervals and how the weights were selected](RESEARCH.md#fit-a-different-blend-for-each-finding)
 
 ## Dataset
 
@@ -65,10 +65,10 @@ The runner writes the initial experiment under `artifacts/` and the extended sea
 
 ## Predict from raw input
 
-Use the [three-model workflow](RESEARCH.md#reproduce-the-selected-three-model-ensemble) to prepare the selected ensemble and its validation lock.
+Train the [three component models](RESEARCH.md#reproduce-the-selected-three-model-ensemble) and make the [validation lock with per-finding weights](RESEARCH.md#fit-a-different-blend-for-each-finding).
 
 ```powershell
-& $p -m medimage.auc_predict --selection "$jointEvaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$jointEvaluation/chest-prediction.json"
+& $p -m medimage.auc_predict --selection "$rankEvaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$rankEvaluation/chest-prediction.json"
 ```
 
 The [example](examples/README.md) runs the selected local models on deterministic synthetic inputs. This is a research and education project.
