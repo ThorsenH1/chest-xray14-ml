@@ -1,6 +1,6 @@
 # Synthetic prediction example
 
-The shared engine generates the input as a deterministic mathematical pattern. The [current BioViL-T ensemble response](biovil-ensemble.json) gives 14 calibrated scores and their validation thresholds. For effusion, the synthetic score is 0.1667 with a threshold of 0.2686. [See where the effusion component responded](../WHERE-THE-MODEL-LOOKS.md)
+The shared engine generates the input as a deterministic mathematical pattern. The [current BioViL-T and ConvNeXt response](convnext-ensemble.json) gives 14 calibrated scores and their validation thresholds. For effusion, the synthetic score is 0.0971 with a threshold of 0.3349. [See where the BioViL-T component responded](../WHERE-THE-MODEL-LOOKS.md)
 
 ![Synthetic input phantom.png](phantom.png)
 

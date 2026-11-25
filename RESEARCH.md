@@ -21,7 +21,7 @@ The patient-linked duplicate groups were detected by the project's exact-pixel a
 
 The BioViL-T image backbone learned from chest X-rays in MIMIC-CXR. This project transfers its single-image ResNet-50 and fits two scoring heads on NIH training images. One summarizes the whole image. The other scores local evidence for each finding and highlights strong regions in the final ranking score. Both run on the full frontal image. [BioViL-T model card and training data](https://huggingface.co/microsoft/BiomedVLP-BioViL-T)
 
-## The selected model and official test result
+## The BioViL-T model and its official test result
 
 The BioViL-T branch reached **0.8398 validation AUROC** in epoch 3 of 5. Selection compared 269 recipes on the same validation split. The winner combines BioViL-T and the reference at 75% and 25%, with **0.8468 validation AUROC**. The ensemble weights and calibration were locked before test scoring.
 
@@ -37,7 +37,7 @@ The 95% patient-bootstrap AUROC interval is **0.8039–0.8161**. The paired AURO
 
 ![Finding-by-finding AUROC on the official test](figures/biovil-compare.png)
 
-## Reproduce the selected model
+## Reproduce the BioViL-T model
 
 Use the candidates from the [previous training commands](AUROC.md#reproduce-and-predict). The following commands reuse their artifacts and add the BioViL-T branch. Download the image model file with SHA-256 `146c244155c930bead77165442c3f3d799b8d26fd0aed627064dd8d53c3b8624`. [Pinned Microsoft image weights](https://huggingface.co/microsoft/BiomedVLP-BioViL-T/blob/7ea37f45d77abfb21c937ce6ced5c205357743f8/biovil_t_image_model_proj_size_128.pt)
 
@@ -73,9 +73,29 @@ I compared 372 recipes on **10,411 validation X-rays in 3,361 duplicate-aware pa
 | Equal blend of reference, BioViL-T, and ConvNeXt | **0.8524** | **0.2813** |
 | Best cross-fitted weighting per finding | 0.8509 | 0.2776 |
 
-The per-finding weights fell short on both metrics. The equal-weight blend proceeds to official test scoring. The completed official test result reported above is **0.8103** for the earlier BioViL-T blend.
+The per-finding weights fell short on both metrics. I froze the equal-weight blend and its calibration before scoring the official test.
 
-The ConvNeXt weight file has SHA-256 `6652fd90fc9c23977659e58515778e16fbbcd43f0b01fc693089cebe6d64c2a9`. Repeat the previous selection command using `$convnextEvaluation` as its output directory and add `--candidate 'convnext224=runs/chest-convnext224@previous-chest224'` to its candidate list.
+## Official test result with ConvNeXt
+
+| Metric on the same 25,596 test images | BioViL-T blend | BioViL-T + ConvNeXt blend |
+| --- | ---: | ---: |
+| Macro AUROC | 0.8103 | **0.8171** |
+| Macro average precision | 0.2804 | **0.2929** |
+| Macro Brier score, lower is better | 0.0573 | **0.0567** |
+| Pneumonia AUROC | 0.7145 | **0.7203** |
+| Infiltration AUROC | 0.7129 | **0.7199** |
+| Emphysema AUROC | 0.9043 | **0.9185** |
+| Edema AUROC | **0.8593** | 0.8568 |
+
+The patient-bootstrap 95% AUROC interval is **0.8107–0.8227**. Paired resampling of **2,797 patient groups** gives an AUROC gain of **+0.0068**, with a 95% interval of **+0.0054 to +0.0083**. Average precision increased by **+0.0125**, with a 95% interval of **+0.0082 to +0.0165**.
+
+AUROC improved for 13 of the 14 findings. Pneumonia and infiltration are still the two lowest-scoring findings. The project has tested multiple fixed recipes against the same official images. An independent cohort is needed to measure transfer across sites.
+
+![Finding-level test AUROC for both BioViL-T ensembles](figures/convnext-comparison.png)
+
+## Reproduce the ConvNeXt model and paired comparison
+
+The ConvNeXt weight file has SHA-256 `6652fd90fc9c23977659e58515778e16fbbcd43f0b01fc693089cebe6d64c2a9`. Prepare the previous candidates with the [BioViL-T commands](#reproduce-the-biovil-t-model) before adding the 224-pixel model.
 
 ```powershell
 $convnext = 'D:/weights/convnextv2-tiny.safetensors'
@@ -85,6 +105,20 @@ $convnextEvaluation = "$experiment/evaluation/chest-convnext224-lock"
     --output "$experiment/runs/chest-convnext224" --epochs 4 --batch 32 --accumulate 2 `
     --resolution 224 --depth 2 --lr 0.00016 --head-lr 0.0005 --class-power 0.29 `
     --dropout 0.28 --seed 5251 --block 2048 --tta
+
+$convnextPaths = @('--work', $experiment, '--previous', $search, '--cohort', $cohort, '--output', $convnextEvaluation)
+& $p -m medimage.auc_selection lock chest @convnextPaths `
+    --candidate 'chex224=runs/chest-chex224@previous-chest224' `
+    --candidate 'reference384=runs/chest-reference384@chest384' `
+    --candidate 'fusion-1=runs/chest-feature-fusion/recipe-1@previous-chest224' `
+    --candidate 'fusion-2=runs/chest-feature-fusion/recipe-2@previous-chest224' `
+    --candidate 'fusion-3=runs/chest-feature-fusion/recipe-3@previous-chest224' `
+    --candidate 'biovil384=runs/chest-biovil-384@chest384' `
+    --candidate 'convnext224=runs/chest-convnext224@previous-chest224'
+& $p -m medimage.auc_selection test chest @convnextPaths --weights $hf --bootstrap 1000
+& $p -m medimage.auc_compare --cohort $cohort --reference $evaluation --candidate $convnextEvaluation `
+    --output "$convnextEvaluation/paired-biovil.json" --figure "$convnextEvaluation/convnext-comparison.png" `
+    --reference-name 'BioViL-T blend' --candidate-name 'BioViL-T + ConvNeXt blend'
 ```
 
 After selection, run the grouped weighting experiment with the saved model scores.

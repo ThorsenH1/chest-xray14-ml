@@ -1,0 +1,80 @@
+{
+  "task": "chest",
+  "purpose": "research and education",
+  "projections": [
+    "frontal"
+  ],
+  "selection_sha256": "010acb77ee54f73f4ea4422d1f92b5e0fa9cde0368d96972a2a76d80d235a071",
+  "scores": {
+    "Atelectasis": {
+      "probability": 0.0451436428736288,
+      "validation_threshold": 0.22756899861817426,
+      "threshold_crossed": false
+    },
+    "Cardiomegaly": {
+      "probability": 0.0015962504180256345,
+      "validation_threshold": 0.1542134983247039,
+      "threshold_crossed": false
+    },
+    "Effusion": {
+      "probability": 0.09707297254026422,
+      "validation_threshold": 0.33492857152437955,
+      "threshold_crossed": false
+    },
+    "Infiltration": {
+      "probability": 0.124951528637641,
+      "validation_threshold": 0.20941033511465293,
+      "threshold_crossed": false
+    },
+    "Mass": {
+      "probability": 0.01407508061544333,
+      "validation_threshold": 0.14665581640719733,
+      "threshold_crossed": false
+    },
+    "Nodule": {
+      "probability": 0.01160686821190238,
+      "validation_threshold": 0.10662205204581003,
+      "threshold_crossed": false
+    },
+    "Pneumonia": {
+      "probability": 0.0093653592565849,
+      "validation_threshold": 0.04052052118592752,
+      "threshold_crossed": false
+    },
+    "Pneumothorax": {
+      "probability": 0.013357365791530325,
+      "validation_threshold": 0.17146092173816235,
+      "threshold_crossed": false
+    },
+    "Consolidation": {
+      "probability": 0.04025956416973835,
+      "validation_threshold": 0.10988050602241568,
+      "threshold_crossed": false
+    },
+    "Edema": {
+      "probability": 0.015367608962399427,
+      "validation_threshold": 0.1574028100101625,
+      "threshold_crossed": false
+    },
+    "Emphysema": {
+      "probability": 0.0010231485322981992,
+      "validation_threshold": 0.18932652348002796,
+      "threshold_crossed": false
+    },
+    "Fibrosis": {
+      "probability": 0.0020895626046104794,
+      "validation_threshold": 0.10685011713236282,
+      "threshold_crossed": false
+    },
+    "Pleural_Thickening": {
+      "probability": 0.007008145039438796,
+      "validation_threshold": 0.09873635124696428,
+      "threshold_crossed": false
+    },
+    "Hernia": {
+      "probability": 0.00012901803323022562,
+      "validation_threshold": 0.1764844843641162,
+      "threshold_crossed": false
+    }
+  }
+}

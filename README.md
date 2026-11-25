@@ -2,21 +2,21 @@
 
 Group-aware training and calibrated prediction for 14 findings on frontal chest radiographs.
 
-**0.8103 macro AUROC** and **0.2804 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8039–0.8161.
+**0.8171 macro AUROC** and **0.2929 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8107–0.8227.
 
-The [BioViL-T experiment](RESEARCH.md) documents the latest validation ranking, paired test comparison and reproducibility. The [earlier high-resolution experiment](AUROC.md) reached 0.8025. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
+The [BioViL-T and ConvNeXt report](RESEARCH.md) documents the validation ranking, paired test comparison and reproduction steps. The [earlier high-resolution experiment](AUROC.md) reached 0.8025. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
 
 ## Start with one prediction
 
-See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WALKTHROUGH.md) follows the image through both models, explains the thresholds and shows how to check the output locally. [See which regions changed its effusion score](WHERE-THE-MODEL-LOOKS.md)
+See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WALKTHROUGH.md) follows the image through the three model components, explains the thresholds and shows how to check the output locally. [See which regions changed its effusion score](WHERE-THE-MODEL-LOOKS.md)
 
 ![One example chest X-ray, its resized input and four prediction scores](examples/workflow.png)
 
 ## Benchmark
 
-![Aggregate AUROC across three locked experiments](figures/auroc-summary.png)
+![Finding-level AUROC with and without the ConvNeXt branch](figures/convnext-comparison.png)
 
-The figure summarizes the earlier experiments. The new comparison and its patient-bootstrap interval are reported in the [research report](RESEARCH.md).
+The paired change in macro AUROC was +0.0068. [See the confidence intervals and earlier experiments](RESEARCH.md#official-test-result-with-convnext)
 
 ## Dataset
 
@@ -65,10 +65,10 @@ The runner writes the initial experiment under `artifacts/` and the extended sea
 
 ## Predict from raw input
 
-Use the [BioViL-T workflow](RESEARCH.md#reproduce-the-selected-model) to prepare the selected ensemble and its validation lock.
+Use the [ConvNeXt workflow](RESEARCH.md#reproduce-the-convnext-model-and-paired-comparison) to prepare the selected ensemble and its validation lock.
 
 ```powershell
-& $p -m medimage.auc_predict --selection "$evaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$evaluation/chest-prediction.json"
+& $p -m medimage.auc_predict --selection "$convnextEvaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$convnextEvaluation/chest-prediction.json"
 ```
 
 The [example](examples/README.md) runs the selected local models on deterministic synthetic inputs. This is a research and education project.
