@@ -144,4 +144,52 @@ $cxrClip = 'D:/weights/swint_mc.tar'
     --dropout 0.28 --seed 5751 --block 2048 --tta
 ```
 
-Add `cxrswin224=runs/chest-cxr-clip-swin224@previous-chest224` to the ConvNeXt candidate list and write to a fresh evaluation directory. The new branch proceeds to official test scoring if it improves the current validation winner and contributes to the selected recipe. To reuse the exact ConvNeXt and BioViL-T component scores, pass `--reuse-components $convnextEvaluation` when scoring the new lock. The engine checks the cohort, label order, full component configuration and cache provenance. A replay reproduced all 25,596 test predictions exactly. The published overall benchmark is currently the **0.8171** ConvNeXt blend.
+Add `cxrswin224=runs/chest-cxr-clip-swin224@previous-chest224` to the ConvNeXt candidate list and write to a fresh evaluation directory. To reuse the exact ConvNeXt and BioViL-T component scores, pass `--reuse-components $convnextEvaluation` when scoring the new lock. The engine checks the cohort, label order, full component configuration and cache provenance. A replay reproduced all 25,596 test predictions exactly.
+
+The individual CXR-CLIP branch peaked in epoch **3 of 4** at **0.8478 validation AUROC**. The search picked an equal blend of BioViL-T, ConvNeXt 224, and CXR-CLIP at **0.8576 validation AUROC**. It reached **0.8286** on the official test.
+
+## Combine CXR-CLIP with higher-resolution ConvNeXt
+
+The ConvNeXt follow-up starts from its 224-pixel checkpoint and adapts it to images at **384 × 384**. Its best of three epochs had **0.8568 validation AUROC**. The initial resolution search favored 75% ConvNeXt 384 and 25% BioViL-T, for **0.8618 validation AUROC**. When both new candidates competed in the same search, the best of 646 recipes gave equal weight to **BioViL-T, ConvNeXt 384 and CXR-CLIP**, with **0.8650 validation AUROC**.
+
+| Frozen trial | Validation AUROC | Official test AUROC | Official test average precision |
+| --- | ---: | ---: | ---: |
+| BioViL-T, ConvNeXt 224 and the earlier reference | 0.8524 | 0.8171 | 0.2929 |
+| BioViL-T, ConvNeXt 224 and CXR-CLIP | 0.8576 | 0.8286 | 0.3076 |
+| BioViL-T and ConvNeXt 384 | 0.8618 | 0.8284 | 0.3087 |
+| BioViL-T, ConvNeXt 384 and CXR-CLIP | **0.8650** | **0.8339** | **0.3138** |
+
+The selected model reached **0.8339** across the 14 findings on the same 25,596 test images. Its 95% patient-bootstrap AUROC interval was **0.8280–0.8390**. The paired improvement over the earlier 0.8171 ensemble was **+0.0168** with a 95% interval of **+0.0144 to +0.0194**. AUROC improved for all 14 findings in that comparison. The paired gain over the 224-pixel CXR-CLIP blend was **+0.0053**, with a 95% interval of **+0.0043 to +0.0061**. Pneumonia rose to **0.7432**, and infiltration rose to **0.7231** relative to the 0.8171 model. The official test is the same NIH cohort used in earlier rounds.
+
+![Finding-level test AUROC for the previous and current three-model ensemble](figures/finding-comparison.png)
+
+### Reproduce the selected three-model ensemble
+
+Prepare the 224-pixel ConvNeXt and CXR-CLIP runs above. Warm-start the 384-pixel follow-up from the best 224-pixel checkpoint.
+
+```powershell
+& $p -m medimage.auc_train chest --backbone convnext-chest --cohort $cohort --pixels $pixels384 `
+    --weights $convnext --parent "$experiment/runs/chest-convnext224/best.pt" `
+    --output "$experiment/runs/chest-convnext384" --epochs 3 --batch 10 --accumulate 6 `
+    --resolution 384 --depth 2 --lr 0.000075 --head-lr 0.00022 --class-power 0.29 `
+    --dropout 0.28 --seed 5253 --block 1024 --tta
+
+$jointEvaluation = "$experiment/evaluation/chest-swin-convnext384-lock"
+$jointPaths = @('--work', $experiment, '--previous', $search, '--cohort', $cohort, '--output', $jointEvaluation)
+& $p -m medimage.auc_selection lock chest @jointPaths `
+    --candidate 'chex224=runs/chest-chex224@previous-chest224' `
+    --candidate 'reference384=runs/chest-reference384@chest384' `
+    --candidate 'fusion-1=runs/chest-feature-fusion/recipe-1@previous-chest224' `
+    --candidate 'fusion-2=runs/chest-feature-fusion/recipe-2@previous-chest224' `
+    --candidate 'fusion-3=runs/chest-feature-fusion/recipe-3@previous-chest224' `
+    --candidate 'biovil384=runs/chest-biovil-384@chest384' `
+    --candidate 'convnext224=runs/chest-convnext224@previous-chest224' `
+    --candidate 'convnext384=runs/chest-convnext384@chest384' `
+    --candidate 'cxrswin224=runs/chest-cxr-clip-swin224@previous-chest224'
+& $p -m medimage.auc_selection test chest @jointPaths --weights $hf --bootstrap 1000
+& $p -m medimage.auc_compare --cohort $cohort --reference $convnextEvaluation --candidate $jointEvaluation `
+    --output "$jointEvaluation/paired-previous.json" --figure "$jointEvaluation/finding-comparison.png" `
+    --reference-name 'Earlier ConvNeXt blend' --candidate-name 'BioViL-T, ConvNeXt 384, and CXR-CLIP'
+```
+
+The [prediction walkthrough](WALKTHROUGH.md) follows the selected model from an example image to the 14 calibrated outputs.

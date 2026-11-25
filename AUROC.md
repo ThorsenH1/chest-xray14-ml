@@ -1,6 +1,6 @@
 # High-resolution chest X-ray experiment
 
-This report covers the earlier 0.8025 ensemble. The [BioViL-T and ConvNeXt follow-up](RESEARCH.md) reached 0.8171 on the same official test.
+This report covers the earlier 0.8025 ensemble. The [current three-model ensemble](RESEARCH.md#combine-cxr-clip-with-higher-resolution-convnext) reached 0.8339 on the same official test.
 
 ![Aggregate AUROC across three locked experiments](figures/auroc-summary.png)
 

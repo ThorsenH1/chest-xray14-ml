@@ -2,9 +2,9 @@
 
 Group-aware training and calibrated prediction for 14 findings on frontal chest radiographs.
 
-**0.8171 macro AUROC** and **0.2929 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8107–0.8227.
+**0.8339 macro AUROC** and **0.3138 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8280–0.8390.
 
-The [BioViL-T and ConvNeXt report](RESEARCH.md) documents the validation ranking, paired test comparison and reproduction steps. The [earlier high-resolution experiment](AUROC.md) reached 0.8025. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
+The [research report](RESEARCH.md) shows why the selected ensemble combines BioViL-T, ConvNeXt and CXR-CLIP. It includes the validation ranking, paired test comparison and reproduction steps. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
 
 ## Start with one prediction
 
@@ -14,9 +14,9 @@ See how a synthetic chest X-ray becomes 14 finding scores. The [walkthrough](WAL
 
 ## Benchmark
 
-![Finding-level AUROC with and without the ConvNeXt branch](figures/convnext-comparison.png)
+![Finding-level test AUROC for the previous and current three-model ensemble](figures/finding-comparison.png)
 
-The paired change in macro AUROC was +0.0068. [See the confidence intervals and earlier experiments](RESEARCH.md#official-test-result-with-convnext)
+The paired change in macro AUROC from the previous ConvNeXt blend was +0.0168. [See the confidence intervals and earlier experiments](RESEARCH.md#combine-cxr-clip-with-higher-resolution-convnext)
 
 ## Dataset
 
@@ -65,10 +65,10 @@ The runner writes the initial experiment under `artifacts/` and the extended sea
 
 ## Predict from raw input
 
-Use the [ConvNeXt workflow](RESEARCH.md#reproduce-the-convnext-model-and-paired-comparison) to prepare the selected ensemble and its validation lock.
+Use the [three-model workflow](RESEARCH.md#reproduce-the-selected-three-model-ensemble) to prepare the selected ensemble and its validation lock.
 
 ```powershell
-& $p -m medimage.auc_predict --selection "$convnextEvaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$convnextEvaluation/chest-prediction.json"
+& $p -m medimage.auc_predict --selection "$jointEvaluation/selection.json" --work $experiment --previous $search --original artifacts --weights $hf --image 'C:/images/frontal.png' --output "$jointEvaluation/chest-prediction.json"
 ```
 
 The [example](examples/README.md) runs the selected local models on deterministic synthetic inputs. This is a research and education project.
