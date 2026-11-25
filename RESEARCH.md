@@ -61,3 +61,36 @@ $paths = @('--work', $experiment, '--previous', $search, '--cohort', $cohort, '-
 ```
 
 The [prediction walkthrough](WALKTHROUGH.md) reproduces one frontal-image result and links to the regional sensitivity test.
+
+## Train a ConvNeXt model and check weighting per finding
+
+A ConvNeXt V2 Tiny model adds a third set of image scores. It starts from ImageNet weights and learns to score all 14 findings on NIH training images. Its best checkpoint was epoch 3 of 4 with **0.8404 validation macro AUROC**. [ConvNeXt checkpoint and training recipe](https://huggingface.co/timm/convnextv2_tiny.fcmae_ft_in22k_in1k)
+
+I compared 372 recipes on **10,411 validation X-rays in 3,361 duplicate-aware patient groups**. The selected recipe averages the raw scores from the reference, BioViL-T, and ConvNeXt models with equal weights. The next experiment let each finding have its own weights. It learned them from positive–negative pairs, with a penalty for moving away from equal weights, and evaluated them in five folds that kept each patient group together.
+
+| Recipe on the development validation split | Macro AUROC | Macro average precision |
+| --- | ---: | ---: |
+| Equal blend of reference, BioViL-T, and ConvNeXt | **0.8524** | **0.2813** |
+| Best cross-fitted weighting per finding | 0.8509 | 0.2776 |
+
+The per-finding weights fell short on both metrics. The equal-weight blend proceeds to official test scoring. The completed official test result reported above is **0.8103** for the earlier BioViL-T blend.
+
+The ConvNeXt weight file has SHA-256 `6652fd90fc9c23977659e58515778e16fbbcd43f0b01fc693089cebe6d64c2a9`. Repeat the previous selection command using `$convnextEvaluation` as its output directory and add `--candidate 'convnext224=runs/chest-convnext224@previous-chest224'` to its candidate list.
+
+```powershell
+$convnext = 'D:/weights/convnextv2-tiny.safetensors'
+$convnextEvaluation = "$experiment/evaluation/chest-convnext224-lock"
+& $p -m medimage.auc_train chest --backbone convnext-chest --cohort $cohort `
+    --pixels "$search/pixels/chest" --weights $convnext `
+    --output "$experiment/runs/chest-convnext224" --epochs 4 --batch 32 --accumulate 2 `
+    --resolution 224 --depth 2 --lr 0.00016 --head-lr 0.0005 --class-power 0.29 `
+    --dropout 0.28 --seed 5251 --block 2048 --tta
+```
+
+After selection, run the grouped weighting experiment with the saved model scores.
+
+```powershell
+& $p -m medimage.chest_rank_blend --base-lock "$convnextEvaluation/selection.json" `
+    --work $experiment --previous $search --cohort $cohort `
+    --output "$experiment/evaluation/chest-convnext224-ranking"
+```
