@@ -128,3 +128,20 @@ After selection, run the grouped weighting experiment with the saved model score
     --work $experiment --previous $search --cohort $cohort `
     --output "$experiment/evaluation/chest-convnext224-ranking"
 ```
+
+## Test another chest-specific image encoder
+
+CXR-CLIP provides separate checkpoints by architecture and pretraining data. This trial uses the Swin Tiny weights trained on **MIMIC-CXR plus CheXpert**. The authors list ChestX-ray14 in a separate release. This lets the project test another chest-trained representation under the existing NIH cohort split. I verified the image-weight conversion, the 14-output classifier and gradients in the unfrozen stages on a synthetic frontal input. [Paper](https://arxiv.org/abs/2310.13292) · [Authors' checkpoint table](https://github.com/Soombit-ai/cxr-clip#pre-trained-model-checkpoint)
+
+Use the file with SHA-256 `19ad633804daa3fd6d48d26a93d3731356eed8dfc836102b95d1c5965c144608`. The model reads 224-pixel grayscale images repeated across three channels. The classifier learns from the global average and maximum of the Swin feature grid. Fine-tune the last two stages on the same training data and evaluate each epoch on validation.
+
+```powershell
+$cxrClip = 'D:/weights/swint_mc.tar'
+& $p -m medimage.auc_train chest --backbone cxr-clip-swin --cohort $cohort `
+    --pixels "$search/pixels/chest" --weights $cxrClip `
+    --output "$experiment/runs/chest-cxr-clip-swin224" --epochs 4 --batch 10 --accumulate 6 `
+    --resolution 224 --depth 2 --lr 0.00009 --head-lr 0.00042 --class-power 0.29 `
+    --dropout 0.28 --seed 5751 --block 2048 --tta
+```
+
+Add `cxrswin224=runs/chest-cxr-clip-swin224@previous-chest224` to the ConvNeXt candidate list and write to a fresh evaluation directory. The new branch proceeds to official test scoring if it improves the current validation winner and contributes to the selected recipe. To reuse the exact ConvNeXt and BioViL-T component scores, pass `--reuse-components $convnextEvaluation` when scoring the new lock. The engine checks the cohort, label order, full component configuration and cache provenance. A replay reproduced all 25,596 test predictions exactly. The published overall benchmark is currently the **0.8171** ConvNeXt blend.
