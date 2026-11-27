@@ -1,0 +1,85 @@
+{
+  "reference_sha256": "d7bf640b78e565fe9960a13776a5cdc5ce41f81e3fc9de973c9ba745d95b8f46",
+  "candidate_sha256": "c8b73810055a2ef587eb6c3cbbd5592f5508d8d5157aaf2608998de19baddbed",
+  "test_rows": 25596,
+  "bootstrap_repeats": 1000,
+  "valid_replicates": 1000,
+  "patients": 2797,
+  "macro_auroc_ci95": [
+    0.8295461584417615,
+    0.8404425469903737
+  ],
+  "macro_auprc_ci95": [
+    0.30429711043226987,
+    0.3343916439974918
+  ],
+  "paired_auroc_delta_ci95": [
+    -0.0008567675106694178,
+    0.001667540678478127
+  ],
+  "paired_auprc_delta_ci95": [
+    0.0007937920294992893,
+    0.007205721788837059
+  ],
+  "macro_auroc_delta": 0.00037632824115474417,
+  "macro_auprc_delta": 0.00417153350858096,
+  "macro_brier_delta": -9.53010637009255e-05,
+  "findings": {
+    "Atelectasis": {
+      "reference": 0.7938954904450541,
+      "candidate": 0.7951251179957189
+    },
+    "Cardiomegaly": {
+      "reference": 0.9011344783624224,
+      "candidate": 0.8919245673512359
+    },
+    "Effusion": {
+      "reference": 0.8427232370316483,
+      "candidate": 0.8422521576203983
+    },
+    "Infiltration": {
+      "reference": 0.7220462885173067,
+      "candidate": 0.7235836957710501
+    },
+    "Mass": {
+      "reference": 0.8444792083270323,
+      "candidate": 0.845811156585146
+    },
+    "Nodule": {
+      "reference": 0.7863759827978585,
+      "candidate": 0.7903085749656904
+    },
+    "Pneumonia": {
+      "reference": 0.7415126399911354,
+      "candidate": 0.7449467917660082
+    },
+    "Pneumothorax": {
+      "reference": 0.8976357083322731,
+      "candidate": 0.8967746211143424
+    },
+    "Consolidation": {
+      "reference": 0.763385103949573,
+      "candidate": 0.7647806204063874
+    },
+    "Edema": {
+      "reference": 0.8676218166202359,
+      "candidate": 0.8626571519028251
+    },
+    "Emphysema": {
+      "reference": 0.9422654484603132,
+      "candidate": 0.9441572944052746
+    },
+    "Fibrosis": {
+      "reference": 0.8481661319493269,
+      "candidate": 0.8482345191221408
+    },
+    "Pleural_Thickening": {
+      "reference": 0.7976308685660806,
+      "candidate": 0.8022560214161264
+    },
+    "Hernia": {
+      "reference": 0.941452508364253,
+      "candidate": 0.9427812166683379
+    }
+  }
+}

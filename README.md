@@ -4,6 +4,8 @@ Group-aware training and calibrated prediction for 14 findings on frontal chest 
 
 **0.8350 macro AUROC** and **0.3154 macro average precision** on 25,596 official test images. The 95% patient-bootstrap AUROC interval is 0.8291–0.8401.
 
+A separate fixed focal-loss blend reached **0.8354 AUROC** and **0.3196 average precision** on the same test cohort. [Paired comparison](RESEARCH.md#give-easy-negatives-less-weight-during-training)
+
 The [research report](RESEARCH.md) shows how the selected ensemble weights BioViL-T, ConvNeXt and CXR-CLIP separately for each finding. It includes the validation ranking, paired test comparison and reproduction steps. [Original model search](REPORT.md) · [Search trajectories](figures/search.png)
 
 ## Start with one prediction

@@ -208,6 +208,15 @@ The follow-up starts from the 384-pixel ConvNeXt checkpoint and fine-tunes for t
 
 Add `convnext384-focal=runs/chest-convnext384-focal@chest384` to the same candidate list and save a separate validation decision. The follow-up qualifies for official test scoring when a blend uses this branch and improves on **0.8650 validation AUROC**.
 
+The highest standalone validation AUROC was **0.85296** after the first epoch. The search locked equal weights for ConvNeXt 384, the focal follow-up, and CXR-CLIP. Its validation AUROC was **0.86575**, which beat the earlier equal-weight reference that set this experiment's test gate.
+
+| Locked models on 25,596 official test radiographs | Validation AUROC | Test AUROC | Test average precision |
+| --- | ---: | ---: | ---: |
+| Selected per-finding weights | **0.86634** | 0.83502 | 0.31540 |
+| Fixed focal blend | 0.86575 | **0.83540** | **0.31957** |
+
+The paired AUROC difference was **+0.00038** with a 95% patient-bootstrap interval of **−0.00086 to +0.00167**. Average precision improved by **0.00417**, with an interval of **+0.00079 to +0.00721**. Fitting individual finding weights to the focal blend produced **0.86598** on patient-grouped validation, below the selected model's 0.86634. The main prediction workflow follows the strongest validation result. [Paired test comparison](figures/focal-comparison.json)
+
 ## Check whether projection information improves ranking
 
 An AP or PA projection label records the direction in which the image was taken. I tested whether a separate correction for each projection helps the model rank patients. Each of five validation folds fits global calibration, then learns a small per-finding offset for AP and PA from the other four folds. The same patient group stays together. The offsets shrink toward zero for findings with little evidence for a correction.
@@ -254,3 +263,17 @@ $rankEvaluation = "$experiment/evaluation/chest-finding-weights"
 ```
 
 The test command verifies that the saved component scores came from the same checkpoints, images and labels. [Follow one prediction with the learned weights](WALKTHROUGH.md)
+
+## Adapt CXR-CLIP to 384-pixel images
+
+The next resolution experiment starts from the selected 224-pixel CXR-CLIP checkpoint. The image is resized to 384 × 384 pixels before the Swin encoder divides it into patches. The larger grid reuses the learned window weights. I checked that the unchanged 224-pixel path reproduces its scores and that the 384-pixel path gives 14 finite scores with gradients in the last stages. The two training epochs use the original patient partitions and a smaller learning rate.
+
+```powershell
+& $p -m medimage.auc_train chest --backbone cxr-clip-swin --cohort $cohort --pixels $pixels384 `
+    --weights $cxrClip --parent "$experiment/runs/chest-cxr-clip-swin224/best.pt" `
+    --output "$experiment/runs/chest-cxr-clip-swin384" --epochs 2 --batch 20 --accumulate 3 `
+    --resolution 384 --depth 2 --lr 0.000045 --head-lr 0.00017 --class-power 0.26 `
+    --dropout 0.28 --seed 5781 --block 2048 --tta
+```
+
+Add `cxrswin384=runs/chest-cxr-clip-swin384@chest384` to the existing candidate list. Compare the result with **0.86634 validation AUROC** before selecting a model for official test scoring.
